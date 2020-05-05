@@ -1,24 +1,24 @@
-function Phi = Update_CH(Phi,M,EPS,dx,dy,dt,MethodFlag)
+function [C, Tol, Iter] = Update_CH(C,Phi,M,EPS,dx,dy,dt,MethodFlag)
 
-f = Calc_DrivingFocre(Phi,M,EPS,dx,dy,MethodFlag);
+f = Calc_Force_CH(C,Phi,M,EPS,dx,dy,MethodFlag);
 
-Phi0 = Phi + f * dt;
-% Phi0 = ApplyBC(Phi0);
+C0 = C + f * dt;
+% C0 = ApplyBC(C0);
 
 for Iter = 1:10000
     
-    f0 = Calc_DrivingFocre(Phi0,M,EPS,dx,dy,MethodFlag);
+    f0 = Calc_Force_CH(C0,Phi,M,EPS,dx,dy,MethodFlag);
     
-    Phi1 = Phi + (f + f0) * dt/2;
-%     Phi1 = ApplyBC(Phi1);
+    C1 = C + (f + f0) * dt/2;
+%     C1 = ApplyBC(C1);
     
-    dPhi = Phi1- Phi0;
-    Tol = max(abs(dPhi(:))) ;
+    dC = C1- C0;
+    Tol = max(abs(dC(:))) ;
     if Tol < 1e-6
-        Phi = Phi1;
+        C = C1;
         break
     else
-        Phi0 = Phi1;
+        C0 = C1;
     end
 end
 

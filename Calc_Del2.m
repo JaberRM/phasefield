@@ -1,4 +1,4 @@
-function [Del2Phi] = Calc_Del2Phi(Phi, dx,dy)
+function [Del2Phi] = Calc_Del2(Phi, dx,dy)
 
 
 % Periodic
