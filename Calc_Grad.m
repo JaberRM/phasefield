@@ -1,5 +1,6 @@
 function GradPhi = Calc_Grad(Phi,dx,dy,Flag)
-
+% Flag = 0 : forward diff
+% Flag = 1 : backward diff
 
 % Periodic
 

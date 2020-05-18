@@ -1,67 +1,111 @@
+% implementation of the model in 
+% Lu, F., Wen, L., Li, J., Wei, J., Xu, J., & Zhang, S. (2016). 
+% Numerical simulation of iron whisker growth with changing oxygen content 
+% in iron oxide using phase-field method. 
+% Computational Materials Science, 125, 263–270. 
+% https://doi.org/10.1016/j.commatsci.2016.09.003
+
 clc; close all; clearvars;
-
 %% System configuration
-% Simulation Geometry
-Lx = 50;
-Ly = 50;
+% Parameters in table 2
+Param.tau = 0.0003;
+Param.theta0 = pi/4;
+Param.J = 4;
+Param.delta = 0.1;
+Param.alpha = 0.9;
+Param.Xi = 2.450;
+Param.XOp = 0.023;
+Param.eta = 0.710;
+Param.D_s = 1e-9;
+Param.D_int = 1e-5;
 
-dx = 1;
-dy = 1;
+% Param.D_s = 1e-3;
+% Param.D_int = 1e0;
+
+% Other parameters from the paper
+Param.dt = 0.0002 ;  % s
+% Param.dt   = 0.00001 ;  % s
+
+Lx = 3;
+Ly = 3;
+
+Param.dx = 0.01;
+Param.dy = 0.01;
+
+Param.eps_bar = 0.02;
+Param.K = 7.3e-3;
+% Param.K = 7.3e-2;
+
+%unknown params
+Param.XOmin  = 0.002;
+Param.theta = 1;
 
 % Simulation time
-T = 400;      % s
-dt = 1e-2 ;  % s
-
-% Number of conservative (Cahn-Hilliard) fields
-NCH = 1;
-
-% Number of non-conservative (Allen-Cahn) fields
-NAC = 1;
-
-% Gradient coeff.
-EPS_CH(1:NCH) = 1e1;
-EPS_AC(1:NAC) = 1e1;
-
-% Mobility
-M0_CH(1:NCH) = 1e-1;
-M0_AC(1:NAC) = 1e-3;
-
+T = 2;
 % Output options
+
 EveryNStep = 100;
 
 %% Initialize variables
-X = 0 : dx : Lx;
-Y = 0 : dx : Ly;
+X0 = -Lx/2 : Param.dx : Lx/2;
+Y0 = -Ly/2 : Param.dx : Ly/2;
 
-Nx = length(X);
-Ny = length(Y);
+Nx = length(X0);
+Ny = length(Y0);
 
-C = zeros(Nx, Ny , NCH) + rand(Nx,Ny,NCH)/100 + 0.45;
-Phi = zeros(Nx, Ny , NCH) + rand(Nx,Ny,NCH)/100 + 0.01;
+X = meshgrid(X0,Y0);
+Y = meshgrid(Y0,X0)';
+
+theta = atan2(Y,X);
+
+InCirc = X.^2 + Y.^2 <= 1;
+
+x   = zeros(Nx, Ny);
+Phi = zeros(Nx, Ny);
+Phi(InCirc) = 1;
+x(InCirc) = 0.6;
 
 %% Run
 Step = 0;
-for time = 0: dt : T
+for time = 0: Param.dt : T
     Step = Step + 1;
     
-    for i = 1:NCH
-        [C(:,:,i), Tol, Iter]= Update_CH( C(:,:,i) , Phi , M0_CH(i), EPS_CH(i), dx , dy , dt , 0);
+    Phi0 = Phi;
+    
+    [Phi, Tol, Iter, converged] = Update_AC( Phi , x , theta, Param );
+    if converged == 0
+        fprintf('Allen-Cahn diverged! Tol=%g,  Iter=%g, \n', Tol, Iter);
+        break;
     end
     
-    for i = 1:NAC
-        [Phi(:,:,i), Tol,Iter] = Update_AC( Phi(:,:,i), C , M0_AC(i), EPS_AC(i), dx , dy , dt );
+    dPhidt = (Phi-Phi0) / Param.dt;
+
+    [x,   Tol, Iter, converged] = Update_DF( x , Phi, dPhidt , Param );
+    if converged == 0
+        fprintf('Diffusion diverged! Tol=%g,  Iter=%g, \n', Tol, Iter);
+        break;
     end
+    
+    
     
     % postprocessing & output
-    if mod(Step,EveryNStep)==1
+    if mod(Step,EveryNStep)==0
         fprintf('Step = %i , time = %g\n', Step, time);
         clf;
-        subplot(1,2,1)
+        subplot(1,3,1)
         cla;
-        surf(X,Y,C(:,:,1),'edgecolor','none'); view(2); xlim([0,max(X)]); ylim([0,max(Y)]); daspect([1 1 100]); colorbar; colormap(gca,'parula');
-        subplot(1,2,2)
+        surf(X,Y,x,'edgecolor','none'); view(2); xlim([min(X0),max(X0)]); ylim([min(Y0),max(Y0)]); daspect([1 1 100]); colorbar; colormap(gca,'jet');
+        subplot(1,3,2)
         cla;
-        surf(X,Y,Phi(:,:,1),'edgecolor','none'); view(2); xlim([0,max(X)]); ylim([0,max(Y)]); daspect([1 1 100]); colorbar; colormap(gca,'parula');
+        surf(X,Y,Phi,'edgecolor','none'); view(2); xlim([min(X0),max(X0)]); ylim([min(Y0),max(Y0)]); daspect([1 1 100]); colorbar; colormap(gca,'jet');
+        subplot(1,3,3)
+        cla;
+        
+        Temp = (Param.XOp - Param.XOmin + Param.eta) ./ (x + Param.XOmin + Param.eta); % Eq 10
+        nu0 = 4*Param.Xi * ( (Temp).^12 - ( (Temp).^6) ); % Eq 10
+        m = Phi .* Param.alpha/pi .* atan(nu0) + 0.5 * (Phi-1); % Eq 9
+
+        surf(X,Y,m,'edgecolor','none'); view(2); xlim([min(X0),max(X0)]); ylim([min(Y0),max(Y0)]); daspect([1 1 100]); colorbar; colormap(gca,'jet');
         drawnow
     end
     

@@ -12,7 +12,7 @@ for Iter = 1:10000
     C1 = C + (f + f0) * dt/2;
 %     C1 = ApplyBC(C1);
     
-    dC = C1- C0;
+    dC = C1 - C0;
     Tol = max(abs(dC(:))) ;
     if Tol < 1e-6
         C = C1;
