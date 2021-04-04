@@ -1,4 +1,4 @@
-function f = Calc_Force_CH(C,Phi,M,EPS,dx,dy,MethodFlag)
+function f = Calc_Force_CH(C,Phi,M,EPS,dx,dy)
 
 % G = G1(c) * f(Phi) + G2(c) * (1-f(Phi))
 % G1 = (5*(C-0.0)).^2 + 10;
@@ -12,9 +12,9 @@ Del2C = Calc_Del2(C, dx,dy);
 
 Mu = dGdC - 2 * EPS .* Del2C;
 
-GradMu = Calc_Grad(Mu,dx,dy,MethodFlag);
+GradMu = Calc_Grad(Mu,dx,dy,1);
 % GradM  = Calc_Grad(M,dx,dy,MethodFlag);
-Div_GradMu = Calc_Div(GradMu,dx,dy,MethodFlag);
+Div_GradMu = Calc_Div(GradMu,dx,dy,-1);
 % f = M .* Div_GradMu + dot(GradM, GradMu,3) - 2*Reaction_rate;
 % f = M .* Div_GradMu + dot(GradM, GradMu,3);
 f = M .* Div_GradMu ;
