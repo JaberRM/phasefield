@@ -1,13 +1,13 @@
-function [Phi, Tol, Iter,converged] = Update_AC(Phi,C ,M,EPS,Param)
+function [Phi, Tol, Iter,converged] = Update_AC(Phi,T ,M,EPS,Param, Mat, Flag_Land)
 
-f = Calc_Force_AC(Phi,C,M,EPS,Param.dx,Param.dy);
+f = Calc_Force_AC(Phi,T,M,EPS,Param.dx,Param.dy, Mat, Flag_Land);
 
 Phi0 = Phi + f * Param.dt;
 % Phi0 = ApplyBC_AC(Phi0);
 converged = 0;
 for Iter = 1:10000
     
-    f0 = Calc_Force_AC(Phi0,C,M,EPS,Param.dx,Param.dy);
+    f0 = Calc_Force_AC(Phi0,T,M,EPS,Param.dx,Param.dy, Mat, Flag_Land);
     
     Phi1 = Phi + (f + f0) * Param.dt/2;
 %     Phi1 = ApplyBC_AC(Phi1);
