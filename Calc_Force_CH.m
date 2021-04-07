@@ -4,7 +4,13 @@ function f = Calc_Force_CH(C,Phi,M,EPS,dx,dy)
 % G1 = (5*(C-0.0)).^2 + 10;
 % G2 = (5*(C-1)).^2 + 10;
 
-dGdC = (20*(C-0.0)) .* Calc_f(Phi) + (20*(C-1)) .*  (1-Calc_f(Phi)) ;
+% dGdC = (20*(C-0.0)) .* Calc_f(Phi) + (20*(C-1)) .*  (1-Calc_f(Phi)) ;
+
+
+% DW
+% G =  5*(c-0.5).^4 - (c-0.5).^2 ;
+dGdC =  20 * (C-0.5).^3 - 2 * (C-0.5);
+
 
 % dFdC = 1e-8*2*(C) ;
 
